@@ -30,7 +30,7 @@ class GDAlgorithm(object):
 		"""The hypothesis function"""
 		return
 		
-	def GetTheta(self,num_of_iteration=100, eps=0.001):
+	def fit(self,num_of_iteration=100, eps=0.001):
 		"""Calculate theta by gradient descent"""
 		self.J=[0]
 		m = self.Y.size
@@ -63,3 +63,16 @@ class LMS(GDAlgorithm):
 	def h_theta(self):
 		#print self.X
 		return np.dot(self.X,self.theta)
+		
+		
+class LogisticRegression_Binary(LMS):
+	def h_theta(self):
+		z=LMS.h_theta(self)
+		return 1.0/(1.0+math.exp(-1.0*z))
+		
+	def J_theta(self):
+		h=self.h_theta()
+		Y_=np.ones_like(self.Y)-self.Y
+		h_=np.ones_like(self.Y)-self.h_theta()
+		logL=np.dot(self.Y.T*np.log(h))+np.dot(Y_.T,log(h_))
+		return logL
