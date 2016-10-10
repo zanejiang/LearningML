@@ -1,6 +1,7 @@
 import numpy as np
 from matplotlib import pyplot  as plt
 import abc
+import math
 
 class GDAlgorithm(object):
 	"""
@@ -30,6 +31,13 @@ class GDAlgorithm(object):
 		"""The hypothesis function"""
 		return
 		
+	
+	def plot_loss_trend(self):
+		fig =plt.figure(1)
+		ax = plt.subplot(111)
+		ax.plot(self.J)
+		fig.show()
+	
 	def fit(self,num_of_iteration=100, eps=0.001):
 		"""Calculate theta by gradient descent"""
 		self.J=[0]
@@ -66,13 +74,25 @@ class LMS(GDAlgorithm):
 		
 		
 class LogisticRegression_Binary(LMS):
+	def score(self,X,y,threshold=0.5):
+		ypredicated = self.predicate(X,threshold)
+		return np.sum(ypredicated == y)*1.0/len(y)
+	
+	def predicate(self,X, threshold=0.5):
+		(m,n)=X.shape
+		X_=np.hstack((np.ones(m).reshape((m,1)),X))
+		z=np.dot(X_,self.theta)
+		P= 1.0/(1.0+np.exp(-1.0*z))
+		return (P>threshold)
+	
 	def h_theta(self):
 		z=LMS.h_theta(self)
-		return 1.0/(1.0+math.exp(-1.0*z))
+		#print z.shape
+		return 1.0/(1.0+np.exp(-1.0*z))
 		
 	def J_theta(self):
 		h=self.h_theta()
 		Y_=np.ones_like(self.Y)-self.Y
 		h_=np.ones_like(self.Y)-self.h_theta()
-		logL=np.dot(self.Y.T*np.log(h))+np.dot(Y_.T,log(h_))
+		logL=np.dot(self.Y.T,np.log(h))+np.dot(Y_.T,np.log(h_))
 		return logL
