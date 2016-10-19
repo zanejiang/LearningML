@@ -27,7 +27,7 @@ class GDAlgorithm(object):
 		return
 		
 	@abc.abstractmethod
-	def h_theta(self):
+	def h_theta(self,X):
 		"""The hypothesis function"""
 		return
 		
@@ -38,16 +38,34 @@ class GDAlgorithm(object):
 		ax.plot(self.J)
 		fig.show()
 	
-	def fit(self,num_of_iteration=100, eps=0.001):
+	def shuffle(self,X,Y):
+		p=np.random.permutation(len(Y))
+		return X[p,:],Y[p]
+
+
+	def fit(self,num_of_iteration=100, eps=0.001, alpha=1, algorithm='batch',batch_size=-1):
 		"""Calculate theta by gradient descent"""
 		self.J=[0]
-		m = self.Y.size
+		if algorithm=='batch':
+			batch_size=len(self.Y)
+
 		for i in range(num_of_iteration):
-			loss = self.Y-self.h_theta()
-			gradient = np.dot(loss.T,self.X)/m
-			self.theta = self.theta+self.alpha*gradient
-			#print self.J_theta()
-			self.J.append(self.J_theta())
+			Y=self.Y
+			X=self.X
+			if algorithm=='Stochatic':
+				X,Y = self.shuffle(self.X,self.Y)
+
+			for j in np.arange(0,len(Y),batch_size):
+				#print j,
+				Xt= X[j:j+batch_size,:]
+				Yt= Y[j:j+batch_size]
+				#print Xt
+				loss = Yt-self.h_theta(Xt)
+				gradient = np.dot(Xt.T,loss)/(len(Yt))
+				self.theta = self.theta+alpha*gradient
+				#print self.theta
+			self.J.append(self.J_theta(X,Y))
+
 			if abs(self.J[-1]-self.J[-2])<eps:
 				print "!Convengence gotten"
 				break
@@ -62,15 +80,14 @@ class LMS(GDAlgorithm):
 		#theta = np.zeros(n+1)
 		GDAlgorithm.__init__(self,alpha,X_,Y,theta)
 		
-	def J_theta(self):
-		m = self.Y.size
-		err = self.h_theta()-self.Y
+	def J_theta(self,X,Y):
+		m = Y.size
+		err = self.h_theta(X)-Y
 		err = np.dot(err.T,err)
 		return 0.5*err/m
 		
-	def h_theta(self):
-		#print self.X
-		return np.dot(self.X,self.theta)
+	def h_theta(self,X):
+		return np.dot(X,self.theta)
 		
 		
 class LogisticRegression_Binary(LMS):
@@ -85,14 +102,15 @@ class LogisticRegression_Binary(LMS):
 		P= 1.0/(1.0+np.exp(-1.0*z))
 		return (P>threshold)
 	
-	def h_theta(self):
-		z=LMS.h_theta(self)
-		#print z.shape
+	def h_theta(self,X):
+		z=np.dot(X,self.theta)
 		return 1.0/(1.0+np.exp(-1.0*z))
 		
-	def J_theta(self):
-		h=self.h_theta()
-		Y_=np.ones_like(self.Y)-self.Y
-		h_=np.ones_like(self.Y)-self.h_theta()
-		logL=np.dot(self.Y.T,np.log(h))+np.dot(Y_.T,np.log(h_))
+	def J_theta(self,X,Y):
+		#print self.theta
+		h=self.h_theta(X)
+		Y_=np.ones_like(Y)-Y
+		h_=np.ones_like(Y)-self.h_theta(X)
+		logL=np.dot(Y.T,np.log(h))+np.dot(Y_.T,np.log(h_))
+		#print logL
 		return logL
