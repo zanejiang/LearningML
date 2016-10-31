@@ -77,9 +77,9 @@ class GDAlgorithm(object):
 		for i in range(num_of_iteration):
 			theta = self.theta
 			loss = self.Y-self.h_theta(self.X)
-			gradient = np.dot(Xt.T,loss)/(len(Yt))
+			gradient = np.dot(self.X.T,loss)/(len(self.Y))
 			self.theta = self.theta+alpha*gradient
-			self.J.append(self.J_theta(X,Y))
+			self.J.append(self.J_theta(self.X,self.Y))
 
 			if np.linalg.norm(self.theta-theta)<eps:
 				break
@@ -113,11 +113,11 @@ class LogisticRegression_Binary(LMS):
 		X_=np.hstack((np.ones(m).reshape((m,1)),X))
 		z=np.dot(X_,self.theta)
 		P= 1.0/(1.0+np.exp(-1.0*z))
-		return (P>threshold)
+		return (P>threshold).astype(np.int8)
 	
 	def h_theta(self,X):
 		z=np.dot(X,self.theta)
-		return 1.0/(1.0+np.exp(-1.0*z))
+		return (1.0/(1.0+np.exp(-1.0*z)))
 		
 	def J_theta(self,X,Y):
 		#print self.theta
